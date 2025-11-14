@@ -1,0 +1,36 @@
+#ifndef BOARD_H
+#define BOARD_H
+
+#include<raylib.h>
+
+
+static const Color Colors[] =
+{
+	DARKGRAY,						// back
+	{.r=173,.g=216,.b=230,.a=255},	// I piece
+	{.r=0,.g=0,.b=139,.a=255}, 	// J piece
+	{.r=255,.g=165,.b=0,.a=255},	// L piece
+	{.r=255,.g=255,.b=0,.a=255},	// O piece
+	{.r=0,.g=255,.b=0,.a=255},	// S piece
+	{.r=255,.g=0,.b=0,.a=255},	// Z piece
+	{.r=255,.g=0,.b=255,.a=255},	// T piece
+};
+
+
+
+
+void initBoard();
+void drawBoard();
+void updateBoard();
+void shiftDown();
+void lockPiece();
+void addTetromino();
+void rotateTetrominoCW();
+void rotateTetrominoCWW();
+void shiftLeft();
+void shiftRight();
+
+
+static inline void setSquare(int row, int col, int value);
+
+#endif
