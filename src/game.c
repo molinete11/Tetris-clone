@@ -1,7 +1,7 @@
 #include "game.h"
 #include "board.h"
 
-const int WIDTH =  400;
+const int WIDTH =  800;
 const int HEIGHT =  800;
 static char keyAPressed = 0;
 

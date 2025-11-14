@@ -16,6 +16,18 @@ static const Color Colors[] =
 	{.r=255,.g=0,.b=255,.a=255},	// T piece
 };
 
+static const Color GhostColors[] =
+{
+	{.r=173,.g=216,.b=230,.a=175},	// I piece
+	{.r=0,.g=0,.b=139,.a=175}, 	// J piece
+	{.r=255,.g=165,.b=0,.a=175},	// L piece
+	{.r=255,.g=255,.b=0,.a=175},	// O piece
+	{.r=0,.g=255,.b=0,.a=175},	// S piece
+	{.r=255,.g=0,.b=0,.a=175},	// Z piece
+	{.r=255,.g=0,.b=255,.a=175},	// T piece
+};
+
+
 
 
 
@@ -29,6 +41,7 @@ void rotateTetrominoCW();
 void rotateTetrominoCWW();
 void shiftLeft();
 void shiftRight();
+
 
 
 static inline void setSquare(int row, int col, int value);

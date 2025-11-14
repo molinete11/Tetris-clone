@@ -34,6 +34,7 @@ void initBoard()
 	board.currentTetr.autoShiftDownClock = clock();
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
+	board.currentTetr.startSoftLockTimer = false;
 	printf("%i\n",board.currentTetr.piece);
 }
 
@@ -51,7 +52,7 @@ void drawBoard()
 			DrawRectangleRec(rec,color);
 		}
 	}
-	color =  Colors[board.currentTetr.piece];
+	color =  GhostColors[board.currentTetr.piece - 1];
 
 	for(char sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
@@ -66,23 +67,37 @@ void updateBoard()
 {
 	int autoShiftTimer = (clock() - board.currentTetr.autoShiftDownClock) * 0.001;
 	
-	if(autoShiftTimer >= 167){
+	if(autoShiftTimer >= 120){
 		shiftDown();
 		board.currentTetr.autoShiftDownClock = clock();
 	}
-
 }
 
 void shiftDown()
 {
-	struct Vec2d lowestBlocks[4];
+	if(!board.currentTetr.startSoftLockTimer){
+		board.currentTetr.softLockTimer = clock();
+	}else{
+		int softLockTimer = (clock() - board.currentTetr.softLockTimer) * 0.001;
 
-	for(char sq = 0; sq < 4; sq++){
-		struct Vec2d nextBlock = board.currentTetr.pieceGrid[sq];
-		for(char i = 0; i < 3 - sq; i++){
+		if(softLockTimer >= 100){
+			lockPiece();
 		}
 	}
-	
+
+	struct Vec2d nextPos = {board.currentTetr.pos.x,board.currentTetr.pos.y + 1};
+	for(char sq = 0; sq < 4; sq++){
+		struct Vec2d tmp = {board.currentTetr.pieceGrid[sq].x + nextPos.x, board.currentTetr.pieceGrid[sq].y + nextPos.y};
+		if(checkNextPosition(tmp) || tmp.y >= HEIGHT_B){
+			board.currentTetr.startSoftLockTimer = true;
+			return;
+		}
+		board.currentTetr.startSoftLockTimer = false;
+	}
+
+
+	board.currentTetr.pos = nextPos;
+
 }
 
 void lockPiece()
@@ -102,6 +117,7 @@ void addTetromino()
 	board.currentTetr.autoShiftDownClock = clock();
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
+	board.currentTetr.startSoftLockTimer = false;
 	printf("%i\n",board.currentTetr.piece);
 }
 
@@ -129,6 +145,8 @@ void shiftLeft()
 			return;
 		}
 	}
+
+	
 	board.currentTetr.pos.x = nextPos.x;
 }
 

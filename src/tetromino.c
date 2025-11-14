@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "tetromino.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +12,7 @@ static const struct Vec2d Figures[7][4][4] = {
 	},
 	{ // J
 		{0,0,0,1,1,1,2,1}, // spawn
-		{1,0,2,0,1,1,2,3}, // rotation 1
+		{1,0,2,0,1,1,1,2}, // rotation 1
 		{0,1,1,1,2,1,2,2}, // rotation 2
 		{1,0,1,1,1,2,0,2}, // rotation 3
 	},
@@ -41,8 +42,8 @@ static const struct Vec2d Figures[7][4][4] = {
 	},
 		{ // T
 		{1,0,0,1,1,1,2,1}, // spawn
-		{0,1,2,1,1,1,1,2}, // rotation 1
-		{0,1,2,1,1,1,1,2}, // rotation 2
+		{1,0,1,1,2,1,1,2}, // rotation 1
+		{0,1,1,1,2,1,1,2}, // rotation 2
 		{1,0,0,1,1,1,1,2}, // rotation 3
 	}
 };

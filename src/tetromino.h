@@ -25,6 +25,7 @@ struct Tetrominos{
 	const struct Vec2d* pieceGrid;
 	TetrominosType piece;
 	struct Vec2d pos;
+	bool startSoftLockTimer;
 	char rotationIdx;
 };
 
