@@ -2,8 +2,7 @@
 
 echo "building"
 mkdir -p bin
-gcc src/main.c src/game.c src/board.c src/tetromino.c -o bin/tetris -lraylib -lm -ldl -lpthread -lGL -lX11
-
+gcc src/main.c src/game.c src/board.c src/tetromino.c -o bin/tetris -L./vendor/ -lraylib -lm -ldl -lpthread -lGL -lX11
 echo "executing"
 __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ./bin/tetris
 cd ..

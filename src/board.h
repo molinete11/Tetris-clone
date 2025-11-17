@@ -1,7 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include<raylib.h>
+#include "../vendor/raylib.h"
 
 
 static const Color Colors[] =
