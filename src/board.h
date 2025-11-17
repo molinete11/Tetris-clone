@@ -41,7 +41,9 @@ void rotateTetrominoCW();
 void rotateTetrominoCWW();
 void shiftLeft();
 void shiftRight();
-
+void checkFilledRows();
+void printBoard();
+void clearRow(int row);
 
 
 static inline void setSquare(int row, int col, int value);

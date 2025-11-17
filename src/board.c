@@ -52,49 +52,73 @@ void drawBoard()
 			DrawRectangleRec(rec,color);
 		}
 	}
-	color =  GhostColors[board.currentTetr.piece - 1];
 
-	for(char sq = 0; sq < 4; sq++){
+	color =  Colors[board.currentTetr.piece];
+
+	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 		Rectangle rec = {
 			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (piece.y + board.currentTetr.pos.y)*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
+
+	// This parts crashes the game
+	/*
+	color =  GhostColors[board.currentTetr.piece - 1];
+	int smallerY = 0;
+
+	for(int sq = 0; sq < 4; sq++){
+		}
+	}
+
+
+	for(int sq = 0; sq < 4; sq++){
+		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
+		Rectangle rec = {
+			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (smallerY - board.currentTetr.pieceGrid[sq].y)*BLOCK_SIZE + 1,
+			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
+		DrawRectangleRec(rec,color);
+	}*/
 }
 
 void updateBoard()
 {
 	int autoShiftTimer = (clock() - board.currentTetr.autoShiftDownClock) * 0.001;
 	
-	if(autoShiftTimer >= 120){
+	if(autoShiftTimer >= 50){
 		shiftDown();
 		board.currentTetr.autoShiftDownClock = clock();
 	}
+
+	checkFilledRows();
 }
 
 void shiftDown()
 {
-	if(!board.currentTetr.startSoftLockTimer){
-		board.currentTetr.softLockTimer = clock();
-	}else{
-		int softLockTimer = (clock() - board.currentTetr.softLockTimer) * 0.001;
 
-		if(softLockTimer >= 100){
-			lockPiece();
-		}
-	}
 
 	struct Vec2d nextPos = {board.currentTetr.pos.x,board.currentTetr.pos.y + 1};
 	for(char sq = 0; sq < 4; sq++){
 		struct Vec2d tmp = {board.currentTetr.pieceGrid[sq].x + nextPos.x, board.currentTetr.pieceGrid[sq].y + nextPos.y};
 		if(checkNextPosition(tmp) || tmp.y >= HEIGHT_B){
 			board.currentTetr.startSoftLockTimer = true;
-			return;
+			break;
 		}
 		board.currentTetr.startSoftLockTimer = false;
 	}
 
+
+	if(!board.currentTetr.startSoftLockTimer){
+		board.currentTetr.softLockTimer = clock();
+	}else{
+		int softLockTimer = (clock() - board.currentTetr.softLockTimer) * 0.001;
+
+		if(softLockTimer >= 140){
+			lockPiece();
+		}
+		return;
+	}
 
 	board.currentTetr.pos = nextPos;
 
@@ -118,7 +142,6 @@ void addTetromino()
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
 	board.currentTetr.startSoftLockTimer = false;
-	printf("%i\n",board.currentTetr.piece);
 }
 
 void rotateTetrominoCW()
@@ -160,6 +183,53 @@ void shiftRight()
 		}
 	}
 	board.currentTetr.pos.x = nextPos.x;
+}
+
+void checkFilledRows()
+{
+	char sqFilledInARow = 0;
+	for(int row = 0; row < HEIGHT_B; row++){
+		sqFilledInARow = 0;
+		for(int col = 0; col < WIDTH_B; col++){
+			
+
+			if(board.grid[row * WIDTH_B + col]){
+					sqFilledInARow++;
+			}else{
+				break;
+			}
+
+			if(sqFilledInARow == WIDTH_B){
+				clearRow(row);
+				sqFilledInARow = 0;
+			}
+		}
+	}
+}
+
+void printBoard()
+{
+	for(int row = 0; row < HEIGHT_B; row++){
+		for(int col = 0; col < WIDTH_B; col++){
+			printf("%i",board.grid[row * WIDTH_B + col]);
+		}
+		printf("\n");
+	}
+}
+
+void clearRow(int row)
+{
+
+	while(row > 1){
+		for(int col = 0; col < 10; col++){
+			setSquare(row, col, board.grid[(row - 1) * WIDTH_B + col]);
+		}
+		row--;
+	}
+
+	for(int col = 0; col < 10; col++){
+		setSquare(row,col,BG);
+	}
 }
 
 bool checkNextPosition(struct Vec2d nextPos){

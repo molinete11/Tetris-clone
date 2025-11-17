@@ -63,4 +63,7 @@ void handelInput()
 	if(IsKeyPressed(KEY_D)){
 		shiftRight();
 	}
+	if(IsKeyPressed(KEY_M)){
+		printBoard();
+	}
 }
