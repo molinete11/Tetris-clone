@@ -27,6 +27,7 @@ void RunGame()
 			Draw();
 		EndDrawing();
 
+
 		handelInput();
 		Update();
 	}
@@ -65,5 +66,20 @@ void handelInput()
 	}
 	if(IsKeyPressed(KEY_M)){
 		printBoard();
+	}
+	if(IsKeyPressed(KEY_SPACE)){
+		while(!WindowShouldClose()){
+			BeginDrawing();
+				ClearBackground(GRAY);
+				Draw();
+			EndDrawing();
+
+			drawBoard();
+			
+			if(IsKeyPressed(KEY_SPACE)){
+				break;
+			}
+		}
+	
 	}
 }

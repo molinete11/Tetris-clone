@@ -54,32 +54,54 @@ void drawBoard()
 	}
 
 	color =  Colors[board.currentTetr.piece];
-
+	printf("holded piece\n");
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
+		printf("block %i, x %i, y %i\t",sq, piece.x, piece.y + board.currentTetr.pos.y);
 		Rectangle rec = {
 			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (piece.y + board.currentTetr.pos.y)*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
-
-	// This parts crashes the game
-	/*
+	printf("\n");
+	
 	color =  GhostColors[board.currentTetr.piece - 1];
-	int smallerY = 0;
-
+	int smallerY = 0xFFFFFFF;
 	for(int sq = 0; sq < 4; sq++){
+		bool validCube = true;
+		const struct Vec2d cube = board.currentTetr.pieceGrid[sq];
+
+		for(int i = sq + 1; i < 4; i++){
+			if(board.currentTetr.pieceGrid[i].x == cube.x){
+				validCube = false;
+				break;
+			}
+		}
+
+		if(!validCube){
+			continue;
+		}
+
+		for(int row = cube.y + board.currentTetr.pos.y; row <= HEIGHT_B; row++){
+			if(board.grid[row * WIDTH_B + cube.x + board.currentTetr.pos.x]){
+				if(row - 1 < smallerY){
+					smallerY = row - 1;
+					break;
+				}
+			}
 		}
 	}
-
-
+	printf("Ghost piece\n");
+	color =  GhostColors[board.currentTetr.piece - 1];
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
+		printf("block %i, x %i, y %i\t",sq, piece.x, (smallerY - piece.y * - 1));
 		Rectangle rec = {
-			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (smallerY - board.currentTetr.pieceGrid[sq].y)*BLOCK_SIZE + 1,
+			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (((smallerY - piece.y * - 1) - 2) - board.currentTetr.pos.y)*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
-	}*/
+	}
+	printf("\n");
 }
 
 void updateBoard()
@@ -209,6 +231,7 @@ void checkFilledRows()
 
 void printBoard()
 {
+	printf("-----------------------------\n");
 	for(int row = 0; row < HEIGHT_B; row++){
 		for(int col = 0; col < WIDTH_B; col++){
 			printf("%i",board.grid[row * WIDTH_B + col]);
