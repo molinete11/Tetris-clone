@@ -54,19 +54,19 @@ void drawBoard()
 	}
 
 	color =  Colors[board.currentTetr.piece];
-	printf("holded piece\n");
+	
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
-		printf("block %i, x %i, y %i\t",sq, piece.x, piece.y + board.currentTetr.pos.y);
+		
 		Rectangle rec = {
 			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (piece.y + board.currentTetr.pos.y)*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
-	printf("\n");
 	
 	color =  GhostColors[board.currentTetr.piece - 1];
-	int smallerY = 0xFFFFFFF;
+	int smallerY = 19;
+	int offset = -99999;
 	for(int sq = 0; sq < 4; sq++){
 		bool validCube = true;
 		const struct Vec2d cube = board.currentTetr.pieceGrid[sq];
@@ -78,7 +78,7 @@ void drawBoard()
 			}
 		}
 
-		if(!validCube){
+		if(!validCube){ // filtro de cubos que no merecen ser iterados
 			continue;
 		}
 
@@ -90,18 +90,44 @@ void drawBoard()
 				}
 			}
 		}
+
+		int y = cube.y - 3;
+		if(y > offset){
+			offset = y;
+		}
+
+		printf("offset %i\n",offset);
 	}
-	printf("Ghost piece\n");
+	
 	color =  GhostColors[board.currentTetr.piece - 1];
+
+	if(board.currentTetr.piece  != I || board.currentTetr.piece != O){
+		for(char sq = 0; sq < 4; sq++){
+			const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
+			int y = smallerY + piece.y - 3 - offset;
+
+			printf("y = %i\n",y);
+			if(board.grid[(y+1) * WIDTH_B + piece.x + board.currentTetr.pos.x] || smallerY == 19){
+				break;
+			}
+
+			if(sq == 3){
+				offset -= 1;
+				break;
+			}
+		}
+	}
+
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
-		printf("block %i, x %i, y %i\t",sq, piece.x, (smallerY - piece.y * - 1));
+		int y = smallerY + piece.y - 3 - offset;
+		//printf("Block y %i, offset %i, smaller y %i\n",sq, offset, smallerY);
+		printf("Block pos y %i, offset %i, smaller y %i\n",piece.y, offset, smallerY);
 		Rectangle rec = {
-			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (((smallerY - piece.y * - 1) - 2) - board.currentTetr.pos.y)*BLOCK_SIZE + 1,
+			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1, .y = y*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
-	printf("\n");
 }
 
 void updateBoard()
@@ -118,8 +144,6 @@ void updateBoard()
 
 void shiftDown()
 {
-
-
 	struct Vec2d nextPos = {board.currentTetr.pos.x,board.currentTetr.pos.y + 1};
 	for(char sq = 0; sq < 4; sq++){
 		struct Vec2d tmp = {board.currentTetr.pieceGrid[sq].x + nextPos.x, board.currentTetr.pieceGrid[sq].y + nextPos.y};
@@ -129,7 +153,6 @@ void shiftDown()
 		}
 		board.currentTetr.startSoftLockTimer = false;
 	}
-
 
 	if(!board.currentTetr.startSoftLockTimer){
 		board.currentTetr.softLockTimer = clock();
@@ -143,7 +166,6 @@ void shiftDown()
 	}
 
 	board.currentTetr.pos = nextPos;
-
 }
 
 void lockPiece()

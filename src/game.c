@@ -3,7 +3,7 @@
 
 const int WIDTH =  800;
 const int HEIGHT =  800;
-static char keyAPressed = 0;
+
 
 void Draw();
 void Update();
@@ -58,7 +58,6 @@ void handelInput()
 		rotateTetrominoCWW();
 	}
 	if(IsKeyPressed(KEY_A)){
-		keyAPressed = 1;
 		shiftLeft();
 	}
 	if(IsKeyPressed(KEY_D)){
@@ -79,6 +78,19 @@ void handelInput()
 			if(IsKeyPressed(KEY_SPACE)){
 				break;
 			}
+			if(IsKeyPressed(KEY_UP)){
+				rotateTetrominoCW();
+			}
+			if(IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_LEFT_SHIFT)){
+				rotateTetrominoCWW();
+			}
+			if(IsKeyPressed(KEY_A)){
+				shiftLeft();
+			}
+			if(IsKeyPressed(KEY_D)){
+				shiftRight();
+			}
+			
 		}
 	
 	}
