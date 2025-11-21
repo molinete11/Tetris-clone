@@ -43,6 +43,7 @@ void shiftLeft();
 void shiftRight();
 void checkFilledRows();
 void printBoard();
+void instantLock();
 void clearRow(int row);
 
 

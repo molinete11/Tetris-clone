@@ -95,23 +95,35 @@ void drawBoard()
 		if(y > offset){
 			offset = y;
 		}
-
-		printf("offset %i\n",offset);
 	}
 	
 	color =  GhostColors[board.currentTetr.piece - 1];
-
-	if(board.currentTetr.piece  != I || board.currentTetr.piece != O){
+	printf("piece %i rotation idx = %i\n", board.currentTetr.piece, board.currentTetr.rotationIdx);
+	if(board.currentTetr.piece  != I || board.currentTetr.piece != O || smallerY != 19){
 		for(char sq = 0; sq < 4; sq++){
 			const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 			int y = smallerY + piece.y - 3 - offset;
+			int x = piece.x + board.currentTetr.pos.x;
 
-			printf("y = %i\n",y);
-			if(board.grid[(y+1) * WIDTH_B + piece.x + board.currentTetr.pos.x] || smallerY == 19){
+			if(board.grid[(y+1) * WIDTH_B + x]){
+				break;
+			}
+			if(sq != 3){
+				continue;
+			}
+
+			offset -= 1;
+
+			if(board.currentTetr.piece != L && board.currentTetr.piece != J){
+				break;
+			}	
+
+			if(board.currentTetr.piece == L && board.currentTetr.rotationIdx == 3 && !board.grid[(y+2) * WIDTH_B + x]){
+				offset -= 1;
 				break;
 			}
 
-			if(sq == 3){
+			if(board.currentTetr.piece == J && board.currentTetr.rotationIdx == 1 && !board.grid[(y+2) * WIDTH_B + x]){
 				offset -= 1;
 				break;
 			}
@@ -121,8 +133,7 @@ void drawBoard()
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 		int y = smallerY + piece.y - 3 - offset;
-		//printf("Block y %i, offset %i, smaller y %i\n",sq, offset, smallerY);
-		printf("Block pos y %i, offset %i, smaller y %i\n",piece.y, offset, smallerY);
+
 		Rectangle rec = {
 			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1, .y = y*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
@@ -259,6 +270,25 @@ void printBoard()
 			printf("%i",board.grid[row * WIDTH_B + col]);
 		}
 		printf("\n");
+	}
+}
+
+void instantLock()
+{
+	bool locked = false;
+	struct Vec2d nextPos = board.currentTetr.pos;
+	while(!locked){
+		nextPos.y++;
+		for(char sq = 0; sq < 4; sq++){
+			struct Vec2d tmp = {board.currentTetr.pieceGrid[sq].x + nextPos.x, board.currentTetr.pieceGrid[sq].y + nextPos.y};
+			if(checkNextPosition(tmp) || tmp.y >= HEIGHT_B){
+				nextPos.y--;
+				board.currentTetr.pos = nextPos;
+				lockPiece();
+				locked = true;
+				break;
+			}
+		}
 	}
 }
 

@@ -63,35 +63,7 @@ void handelInput()
 	if(IsKeyPressed(KEY_D)){
 		shiftRight();
 	}
-	if(IsKeyPressed(KEY_M)){
-		printBoard();
-	}
 	if(IsKeyPressed(KEY_SPACE)){
-		while(!WindowShouldClose()){
-			BeginDrawing();
-				ClearBackground(GRAY);
-				Draw();
-			EndDrawing();
-
-			drawBoard();
-			
-			if(IsKeyPressed(KEY_SPACE)){
-				break;
-			}
-			if(IsKeyPressed(KEY_UP)){
-				rotateTetrominoCW();
-			}
-			if(IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_LEFT_SHIFT)){
-				rotateTetrominoCWW();
-			}
-			if(IsKeyPressed(KEY_A)){
-				shiftLeft();
-			}
-			if(IsKeyPressed(KEY_D)){
-				shiftRight();
-			}
-			
-		}
-	
+		instantLock();
 	}
 }
