@@ -65,6 +65,8 @@ void drawBoard()
 	}
 	
 	color =  GhostColors[board.currentTetr.piece - 1];
+
+
 	int smallerY = 19;
 	int offset = -99999;
 	for(int sq = 0; sq < 4; sq++){
@@ -82,7 +84,7 @@ void drawBoard()
 			continue;
 		}
 
-		for(int row = cube.y + board.currentTetr.pos.y; row <= HEIGHT_B; row++){
+		for(int row = cube.y + board.currentTetr.pos.y; row < HEIGHT_B; row++){
 			if(board.grid[row * WIDTH_B + cube.x + board.currentTetr.pos.x]){
 				if(row - 1 < smallerY){
 					smallerY = row - 1;
@@ -98,8 +100,8 @@ void drawBoard()
 	}
 	
 	color =  GhostColors[board.currentTetr.piece - 1];
-	printf("piece %i rotation idx = %i\n", board.currentTetr.piece, board.currentTetr.rotationIdx);
-	if(board.currentTetr.piece  != I || board.currentTetr.piece != O || smallerY != 19){
+	
+	if(board.currentTetr.piece  != I && board.currentTetr.piece != O && smallerY != 19){
 		for(char sq = 0; sq < 4; sq++){
 			const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 			int y = smallerY + piece.y - 3 - offset;
@@ -129,6 +131,9 @@ void drawBoard()
 			}
 		}
 	}
+
+	printf("offset %i, smallerY %i\n", offset, smallerY);
+
 
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
