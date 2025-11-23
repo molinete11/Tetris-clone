@@ -7,7 +7,7 @@ const int HEIGHT =  800;
 
 void Draw();
 void Update();
-void handelInput();
+void handleInput();
 
 void InitGame()
 {
@@ -49,7 +49,7 @@ void Update()
 	updateBoard();
 }
 
-void handelInput()
+void handleInput()
 {
 	if(IsKeyPressed(KEY_UP)){
 		rotateTetrominoCW();
