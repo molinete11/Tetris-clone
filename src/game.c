@@ -1,5 +1,6 @@
 #include "game.h"
 #include "board.h"
+#include "score.h"
 
 const int WIDTH =  800;
 const int HEIGHT =  800;
@@ -28,7 +29,7 @@ void RunGame()
 		EndDrawing();
 
 
-		handelInput();
+		handleInput();
 		Update();
 	}
 }
@@ -38,15 +39,17 @@ void CleanGame()
 	CloseWindow();
 }
 
-
 void Draw()
 {
-  drawBoard();
+	drawBoard();
+	drawScore();
+	drawHoldPiece();
 }
 
 void Update()
 {
-	updateBoard();
+	char rowsCleared = updateBoard();
+	updateScore(rowsCleared);
 }
 
 void handleInput()
@@ -65,5 +68,8 @@ void handleInput()
 	}
 	if(IsKeyPressed(KEY_SPACE)){
 		instantLock();
+	}
+	if(IsKeyPressed(KEY_C)){
+		storePiece();
 	}
 }

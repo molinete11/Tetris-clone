@@ -9,11 +9,15 @@
 #define BLOCK_SIZE  40
 #define WIDTH_B  10
 #define HEIGHT_B  20
+#define LEFT_SPACE BLOCK_SIZE * 3
 
 
 struct Board{ 
 	int grid[200];
+	struct Tetrominos hold;
 	struct Tetrominos currentTetr;
+	char holding;
+	char swap;
 };
 
 static struct Board board = {};
@@ -28,6 +32,9 @@ void initBoard()
 
 	initBag();
 
+	board.holding = 0;
+	board.swap = 0;
+
 	board.currentTetr.piece = getPiece();
 	board.currentTetr.pieceGrid = getPieceGrid(board.currentTetr.piece);
 	board.currentTetr.pos = (struct Vec2d){.x = 3, .y = -2};
@@ -35,7 +42,6 @@ void initBoard()
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
 	board.currentTetr.startSoftLockTimer = false;
-	printf("%i\n",board.currentTetr.piece);
 }
 
 void drawBoard()
@@ -47,7 +53,7 @@ void drawBoard()
 		{
 			color =  Colors[board.grid[row * WIDTH_B + col]];
 			Rectangle rec = {
-				.x = col*BLOCK_SIZE + 1,	.y = row*BLOCK_SIZE + 1,
+				.x = col*BLOCK_SIZE + 1 + LEFT_SPACE,	.y = row*BLOCK_SIZE + 1,
 				.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 			DrawRectangleRec(rec,color);
 		}
@@ -59,7 +65,7 @@ void drawBoard()
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 		
 		Rectangle rec = {
-			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1,	.y = (piece.y + board.currentTetr.pos.y)*BLOCK_SIZE + 1,
+			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1 + LEFT_SPACE,	.y = (piece.y + board.currentTetr.pos.y)*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
@@ -132,21 +138,40 @@ void drawBoard()
 		}
 	}
 
-	printf("offset %i, smallerY %i\n", offset, smallerY);
-
-
 	for(int sq = 0; sq < 4; sq++){
 		const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 		int y = smallerY + piece.y - 3 - offset;
 
 		Rectangle rec = {
-			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1, .y = y*BLOCK_SIZE + 1,
+			.x = (piece.x + board.currentTetr.pos.x)*BLOCK_SIZE + 1 + LEFT_SPACE, .y = y*BLOCK_SIZE + 1,
 			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 		DrawRectangleRec(rec,color);
 	}
 }
 
-void updateBoard()
+void drawHoldPiece(){
+	DrawRectangleLines(10 * BLOCK_SIZE + 1 + LEFT_SPACE, BLOCK_SIZE, BLOCK_SIZE * 5, BLOCK_SIZE * 5, RAYWHITE);
+}
+
+void storePiece()
+{
+	if(!board.holding){
+		board.hold = board.currentTetr;
+		addTetromino();
+		board.holding = 1;
+	}else if(board.swap){
+		struct Tetrominos tmp = board.currentTetr;
+		board.currentTetr = board.hold;
+		board.hold = tmp;
+		board.currentTetr.pos.y = 0;
+		board.currentTetr.pos.x = 3;
+		board.currentTetr.rotationIdx = 0;
+		board.swap = 0;
+	}
+
+}
+
+char updateBoard()
 {
 	int autoShiftTimer = (clock() - board.currentTetr.autoShiftDownClock) * 0.001;
 	
@@ -155,7 +180,7 @@ void updateBoard()
 		board.currentTetr.autoShiftDownClock = clock();
 	}
 
-	checkFilledRows();
+	return checkFilledRows();
 }
 
 void shiftDown()
@@ -174,9 +199,9 @@ void shiftDown()
 		board.currentTetr.softLockTimer = clock();
 	}else{
 		int softLockTimer = (clock() - board.currentTetr.softLockTimer) * 0.001;
-
 		if(softLockTimer >= 140){
 			lockPiece();
+			board.swap = 1;
 		}
 		return;
 	}
@@ -208,6 +233,21 @@ void rotateTetrominoCW()
 {
 	board.currentTetr.rotationIdx = (board.currentTetr.rotationIdx + 1) % 4;
 	board.currentTetr.pieceGrid = getRotatedPieceGrid(board.currentTetr.piece,board.currentTetr.rotationIdx);
+
+	for(int i = 0; i < 4; i++)
+	{
+		if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0){
+			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0)
+			{
+				board.currentTetr.pos.x++;
+			}
+		}else if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9){
+			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9)
+			{
+				board.currentTetr.pos.x--;
+			}
+		}
+	}
 }
 
 void rotateTetrominoCWW()
@@ -217,6 +257,21 @@ void rotateTetrominoCWW()
 		board.currentTetr.rotationIdx = 3;
 	}
 	board.currentTetr.pieceGrid = getRotatedPieceGrid(board.currentTetr.piece,board.currentTetr.rotationIdx);
+
+	for(int i = 0; i < 4; i++)
+	{
+		if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0){
+			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0)
+			{
+				board.currentTetr.pos.x++;
+			}
+		}else if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9){
+			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9)
+			{
+				board.currentTetr.pos.x--;
+			}
+		}
+	}
 }
 
 void shiftLeft()
@@ -245,8 +300,9 @@ void shiftRight()
 	board.currentTetr.pos.x = nextPos.x;
 }
 
-void checkFilledRows()
+char checkFilledRows()
 {
+	char nFilledRows = 0;
 	char sqFilledInARow = 0;
 	for(int row = 0; row < HEIGHT_B; row++){
 		sqFilledInARow = 0;
@@ -260,11 +316,14 @@ void checkFilledRows()
 			}
 
 			if(sqFilledInARow == WIDTH_B){
+				nFilledRows++;
 				clearRow(row);
 				sqFilledInARow = 0;
 			}
 		}
 	}
+
+	return nFilledRows;
 }
 
 void printBoard()
@@ -289,6 +348,7 @@ void instantLock()
 			if(checkNextPosition(tmp) || tmp.y >= HEIGHT_B){
 				nextPos.y--;
 				board.currentTetr.pos = nextPos;
+				board.swap = 1;
 				lockPiece();
 				locked = true;
 				break;

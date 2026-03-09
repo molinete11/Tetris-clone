@@ -62,7 +62,7 @@ void initBag()
     srand(time(NULL));
 
     for(char i = 0; i < 7; i++){
-        char selected = (rand() % avaiableOpts);
+        char selected = ((unsigned long long)random() * avaiableOpts) >> 31;
         bag[i] = opt[selected];
         opt[selected] = opt[--avaiableOpts];
     }
@@ -73,7 +73,8 @@ TetrominosType getPiece()
     if(!piecesAvaiable){
 		refillBag();
 	}
-	int selected = rand() % piecesAvaiable;
+	int selected = (random() * piecesAvaiable) >> 31;
+	//printf("random %i\n", selected);
 	TetrominosType tetr = bag[selected];
 	bag[selected] = bag[--piecesAvaiable];
 	usedPieces[usedPieceCount++] = tetr;

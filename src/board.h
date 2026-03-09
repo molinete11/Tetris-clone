@@ -33,7 +33,9 @@ static const Color GhostColors[] =
 
 void initBoard();
 void drawBoard();
-void updateBoard();
+void drawHoldPiece();
+void storePiece();
+char updateBoard();
 void shiftDown();
 void lockPiece();
 void addTetromino();
@@ -41,7 +43,7 @@ void rotateTetrominoCW();
 void rotateTetrominoCWW();
 void shiftLeft();
 void shiftRight();
-void checkFilledRows();
+char checkFilledRows();
 void printBoard();
 void instantLock();
 void clearRow(int row);
