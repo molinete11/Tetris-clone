@@ -9,13 +9,13 @@
 #define BLOCK_SIZE  40
 #define WIDTH_B  10
 #define HEIGHT_B  20
-#define LEFT_SPACE BLOCK_SIZE * 3
+#define LEFT_SPACE BLOCK_SIZE * 10
 
 
 struct Board{ 
 	int grid[200];
-	struct Tetrominos hold;
 	struct Tetrominos currentTetr;
+	enum TetrominosType hold;
 	char holding;
 	char swap;
 };
@@ -150,25 +150,46 @@ void drawBoard()
 }
 
 void drawHoldPiece(){
-	DrawRectangleLines(10 * BLOCK_SIZE + 1 + LEFT_SPACE, BLOCK_SIZE, BLOCK_SIZE * 5, BLOCK_SIZE * 5, RAYWHITE);
+
+	const int x = BLOCK_SIZE * 2;
+	const int y = BLOCK_SIZE * 2;
+
+
+	DrawRectangleLines(x, y, BLOCK_SIZE * 4, BLOCK_SIZE * 4, (Color){.a = 255, .r = 255, .g = 0, .b = 0});
+
+	if(board.holding){
+
+		const struct Vec2d* tetromino = getPieceGrid(board.hold);
+
+		for(int sq = 0; sq < 4; sq++){
+			const struct Vec2d piece = tetromino[sq];
+
+			Rectangle rec = {
+				.x = (piece.x * BLOCK_SIZE + x), .y = piece.y * BLOCK_SIZE + y,
+				.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
+
+
+			DrawRectangleRec(rec, RAYWHITE);
+		}
+	}
 }
 
 void storePiece()
 {
 	if(!board.holding){
-		board.hold = board.currentTetr;
+		board.hold = board.currentTetr.piece;
 		addTetromino();
 		board.holding = 1;
 	}else if(board.swap){
-		struct Tetrominos tmp = board.currentTetr;
-		board.currentTetr = board.hold;
+		enum TetrominosType tmp = board.currentTetr.piece;
+		board.currentTetr.piece = board.hold;
 		board.hold = tmp;
+		board.currentTetr.pieceGrid = getPieceGrid(board.currentTetr.piece);
 		board.currentTetr.pos.y = 0;
 		board.currentTetr.pos.x = 3;
 		board.currentTetr.rotationIdx = 0;
 		board.swap = 0;
 	}
-
 }
 
 char updateBoard()

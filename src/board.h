@@ -28,9 +28,6 @@ static const Color GhostColors[] =
 };
 
 
-
-
-
 void initBoard();
 void drawBoard();
 void drawHoldPiece();
