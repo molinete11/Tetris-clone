@@ -9,13 +9,15 @@
 #define BLOCK_SIZE  40
 #define WIDTH_B  10
 #define HEIGHT_B  20
-#define LEFT_SPACE BLOCK_SIZE * 10
+#define LEFT_SPACE (BLOCK_SIZE * 7)
+#define BOARD_WIDTH (BLOCK_SIZE * WIDTH_B)
 
 
 struct Board{ 
 	int grid[200];
 	struct Tetrominos currentTetr;
 	enum TetrominosType hold;
+	enum TetrominosType queue[4];
 	char holding;
 	char swap;
 };
@@ -23,6 +25,7 @@ struct Board{
 static struct Board board = {};
 
 bool checkNextPosition(struct Vec2d nextPos);
+void initPieceQueue(TetrominosType queue[4]);
 
 void initBoard()
 {
@@ -42,6 +45,8 @@ void initBoard()
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
 	board.currentTetr.startSoftLockTimer = false;
+
+	initPieceQueue(board.queue);
 }
 
 void drawBoard()
@@ -160,6 +165,7 @@ void drawHoldPiece(){
 	if(board.holding){
 
 		const struct Vec2d* tetromino = getPieceGrid(board.hold);
+		const Color c = Colors[board.hold];
 
 		for(int sq = 0; sq < 4; sq++){
 			const struct Vec2d piece = tetromino[sq];
@@ -169,7 +175,7 @@ void drawHoldPiece(){
 				.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
 
 
-			DrawRectangleRec(rec, RAYWHITE);
+			DrawRectangleRec(rec, c);
 		}
 	}
 }
@@ -178,7 +184,7 @@ void storePiece()
 {
 	if(!board.holding){
 		board.hold = board.currentTetr.piece;
-		addTetromino();
+		getNextQueuePiece();
 		board.holding = 1;
 	}else if(board.swap){
 		enum TetrominosType tmp = board.currentTetr.piece;
@@ -236,7 +242,8 @@ void lockPiece()
 			const struct Vec2d piece = board.currentTetr.pieceGrid[sq];
 			setSquare(piece.y + board.currentTetr.pos.y, piece.x + board.currentTetr.pos.x, board.currentTetr.piece);	
 	}
-	addTetromino();
+	//addTetromino();
+	getNextQueuePiece();
 }
 
 void addTetromino()
@@ -392,6 +399,77 @@ void clearRow(int row)
 		setSquare(row,col,BG);
 	}
 }
+
+void drawPieceQueue()
+{
+	const int x = LEFT_SPACE + BOARD_WIDTH + BLOCK_SIZE;
+	const int y = BLOCK_SIZE * 2;
+
+	DrawRectangleLines(x, y, BLOCK_SIZE * 4, BLOCK_SIZE * 4, (Color){.a = 255, .r = 255, .g = 0, .b = 0});
+
+	TetrominosType nextPiece = board.queue[0];
+
+	const struct Vec2d* tetromino = getPieceGrid(nextPiece);
+	Color c = Colors[nextPiece];
+
+	for(int sq = 0; sq < 4; sq++){
+		const struct Vec2d piece = tetromino[sq];
+
+		Rectangle rec = {
+			.x = (piece.x * BLOCK_SIZE + x), .y = piece.y * BLOCK_SIZE + y,
+			.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
+
+
+		DrawRectangleRec(rec, c);
+	}
+	
+	const int nextPiecesY = BLOCK_SIZE * 4 + y + BLOCK_SIZE;
+	
+	DrawRectangleLines(x, nextPiecesY, BLOCK_SIZE * 4, (BLOCK_SIZE * 4) * 3, (Color){.a = 255, .r = 255, .g = 0, .b = 0});
+
+	for(int i = 0; i < 3; i++){
+		nextPiece = board.queue[i + 1];
+		c = Colors[nextPiece];
+		int offset = (BLOCK_SIZE * 4) * i;
+		const struct Vec2d* nTetromino = getPieceGrid(nextPiece);
+
+		for(int sq = 0; sq < 4; sq++){
+			const struct Vec2d piece = nTetromino[sq];
+
+			Rectangle rec = {
+				.x = (piece.x * BLOCK_SIZE + x), .y = piece.y * BLOCK_SIZE + nextPiecesY + offset,
+				.width = BLOCK_SIZE - 2,	.height = BLOCK_SIZE - 2};
+
+
+			DrawRectangleRec(rec, c);
+		}
+	}
+}
+
+void getNextQueuePiece()
+{
+	board.currentTetr.piece = board.queue[0];
+	board.currentTetr.pieceGrid = getPieceGrid(board.currentTetr.piece);
+	board.currentTetr.pos = (struct Vec2d){.x = 3, .y = 0};
+	board.currentTetr.autoShiftDownClock = clock();
+	board.currentTetr.softLockTimer = clock();
+	board.currentTetr.rotationIdx = 0;
+	board.currentTetr.startSoftLockTimer = false;
+
+	board.queue[0] = board.queue[1];
+	board.queue[1] = board.queue[2];
+	board.queue[2] = board.queue[3];
+	board.queue[3] = getPiece();
+}
+
+void initPieceQueue(TetrominosType queue[4])
+{
+	for(int i = 0; i < 4; i++){
+		queue[i] = getPiece();
+	}
+}
+
+
 
 bool checkNextPosition(struct Vec2d nextPos){
 	if(board.grid[nextPos.y * WIDTH_B + nextPos.x]){

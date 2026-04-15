@@ -44,6 +44,7 @@ void Draw()
 	drawBoard();
 	drawScore();
 	drawHoldPiece();
+	drawPieceQueue();
 }
 
 void Update()

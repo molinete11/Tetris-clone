@@ -44,6 +44,9 @@ char checkFilledRows();
 void printBoard();
 void instantLock();
 void clearRow(int row);
+void drawPieceQueue();
+void getNextQueuePiece();
+
 
 
 static inline void setSquare(int row, int col, int value);
