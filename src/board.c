@@ -22,6 +22,31 @@ struct Board{
 	char swap;
 };
 
+
+/*
+	0 -> Spawn state
+	R -> State after a clockwise rotation
+	L -> State after a counterclockwise rotation
+	2 -> State after two rotations in either direction
+*/
+
+// Special offsets for  rotation kicks
+
+const struct Vec2d rotationOffsets[4][5] = {
+	{{.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}},
+	{{.x = 0, .y = 0}, {.x = 1, .y = 0}, {.x = 1, .y = -1}, {.x = 0, .y = 2}, {.x = 1, .y = 2}},
+	{{.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}},
+	{{.x = 0, .y = 0}, {.x = -1, .y = 0}, {.x = -1, .y = -1}, {.x = 0, .y = 2}, {.x = -1, .y = 2}},
+};
+
+const struct Vec2d rotationOffsetsI[4][5] = {
+	{{.x = 0, .y = 0}, {.x = -1, .y = 0}, {.x = 2, .y = 0}, {.x = -1, .y = 0}, {.x = 2, .y = 0}},
+	{{.x = -1, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}, {.x = 0, .y = 1}, {.x = 0, .y = -2}},
+	{{.x = -1, .y = 1}, {.x = 1, .y = 1}, {.x = -2, .y = 1}, {.x = 1, .y = 0}, {.x = -2, .y = 0}},
+	{{.x = 0, .y = 1}, {.x = 0, .y = 1}, {.x = 0, .y = 1}, {.x = 0, .y = -1}, {.x = 0, .y = 2}},
+};
+
+
 static struct Board board = {};
 
 bool checkNextPosition(struct Vec2d nextPos);
@@ -215,7 +240,7 @@ void shiftDown()
 	struct Vec2d nextPos = {board.currentTetr.pos.x,board.currentTetr.pos.y + 1};
 	for(char sq = 0; sq < 4; sq++){
 		struct Vec2d tmp = {board.currentTetr.pieceGrid[sq].x + nextPos.x, board.currentTetr.pieceGrid[sq].y + nextPos.y};
-		if(checkNextPosition(tmp) || tmp.y >= HEIGHT_B){
+		if(tmp.y >= HEIGHT_B || checkNextPosition(tmp)){
 			board.currentTetr.startSoftLockTimer = true;
 			break;
 		}
@@ -257,46 +282,169 @@ void addTetromino()
 	board.currentTetr.startSoftLockTimer = false;
 }
 
-void rotateTetrominoCW()
-{
-	board.currentTetr.rotationIdx = (board.currentTetr.rotationIdx + 1) % 4;
-	board.currentTetr.pieceGrid = getRotatedPieceGrid(board.currentTetr.piece,board.currentTetr.rotationIdx);
+void rotateTetrominoCW() // 0 -> R, R -> 2, 2 -> L, L -> 0
+{	
+	if(board.currentTetr.piece != I){
+		const char testCase = board.currentTetr.rotationIdx;
+		char nextRotationIdx = (board.currentTetr.rotationIdx + 1) % 4;
+		const struct Vec2d pos = board.currentTetr.pos;
+		const struct Vec2d *grid = getRotatedPieceGrid(board.currentTetr.piece, nextRotationIdx);
 
-	for(int i = 0; i < 4; i++)
-	{
-		if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0){
-			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0)
-			{
-				board.currentTetr.pos.x++;
+		struct Vec2d offsetsTest[5];
+
+		for(int i = 0; i < 5; i++){
+			offsetsTest[i] = (struct Vec2d){
+				.x = rotationOffsets[testCase][i].x - rotationOffsets[nextRotationIdx][i].x,
+				.y = rotationOffsets[testCase][i].y - rotationOffsets[nextRotationIdx][i].y,
+			};
+		}
+
+		for(int i = 0; i < 5; i++){
+			char success = 1;
+			for(int j = 0; j < 4; j++){
+				const int nX = grid[j].x + pos.x + offsetsTest[i].x;
+				const int nY = grid[j].y + pos.y + offsetsTest[i].y;
+				if((nX < 0 || nX > 9) || (nY >= HEIGHT_B)){
+					success = 0;
+					break;
+				}
+
+				if(board.grid[nY * WIDTH_B + nX]){
+					success = 0;
+					break;
+				}
 			}
-		}else if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9){
-			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9)
-			{
-				board.currentTetr.pos.x--;
+
+			if(success){
+				board.currentTetr.pos.x += offsetsTest[i].x;
+				board.currentTetr.pos.y += offsetsTest[i].y;
+				board.currentTetr.rotationIdx = nextRotationIdx;
+				board.currentTetr.pieceGrid = grid;
+				break;
+			}
+		}
+	}else{
+		const char testCase = board.currentTetr.rotationIdx;
+		char nextRotationIdx = (board.currentTetr.rotationIdx + 1) % 4;
+		const struct Vec2d pos = board.currentTetr.pos;
+		const struct Vec2d *grid = getRotatedPieceGrid(board.currentTetr.piece, nextRotationIdx);
+
+		struct Vec2d offsetsTest[5];
+
+		for(int i = 0; i < 5; i++){
+			offsetsTest[i] = (struct Vec2d){
+				.x = rotationOffsetsI[testCase][i].x - rotationOffsetsI[nextRotationIdx][i].x,
+				.y = rotationOffsetsI[testCase][i].y - rotationOffsetsI[nextRotationIdx][i].y,
+			};
+		}
+
+		for(int i = 0; i < 5; i++){
+			char success = 1;
+			for(int j = 0; j < 4; j++){
+				const int nX = grid[j].x + pos.x + offsetsTest[i].x;
+				const int nY = grid[j].y + pos.y + offsetsTest[i].y;
+				if((nX < 0 || nX > 9) || (nY >= HEIGHT_B)){
+					success = 0;
+					break;
+				}
+
+				if(board.grid[nY * WIDTH_B + nX]){
+					success = 0;
+					break;
+				}
+			}
+
+			if(success){
+				board.currentTetr.pos.x += offsetsTest[i].x;
+				board.currentTetr.pos.y += offsetsTest[i].y;
+				board.currentTetr.rotationIdx = nextRotationIdx;
+				board.currentTetr.pieceGrid = grid;
+				break;
 			}
 		}
 	}
 }
 
-void rotateTetrominoCWW()
+void rotateTetrominoCWW() // 0 -> L, L -> 2, 2 -> R, R -> 0
 {
-	board.currentTetr.rotationIdx = (board.currentTetr.rotationIdx - 1) % 4;
-	if(board.currentTetr.rotationIdx < 0){
-		board.currentTetr.rotationIdx = 3;
-	}
-	board.currentTetr.pieceGrid = getRotatedPieceGrid(board.currentTetr.piece,board.currentTetr.rotationIdx);
+	if(board.currentTetr.piece != I){
+		const char testCase = board.currentTetr.rotationIdx;
+		char nextRotationIdx = (board.currentTetr.rotationIdx - 1) % 4;
+		nextRotationIdx = (nextRotationIdx < 0) ? 3 : nextRotationIdx;
+		const struct Vec2d pos = board.currentTetr.pos;
+		const struct Vec2d *grid = getRotatedPieceGrid(board.currentTetr.piece, nextRotationIdx);
 
-	for(int i = 0; i < 4; i++)
-	{
-		if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0){
-			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x < 0)
-			{
-				board.currentTetr.pos.x++;
+		struct Vec2d offsetsTest[5];
+
+		for(int i = 0; i < 5; i++){
+			offsetsTest[i] = (struct Vec2d){
+				.x = rotationOffsets[testCase][i].x - rotationOffsets[nextRotationIdx][i].x,
+				.y = rotationOffsets[testCase][i].y - rotationOffsets[nextRotationIdx][i].y,
+			};
+		}
+
+		for(int i = 0; i < 5; i++){
+			char success = 1;
+			for(int j = 0; j < 4; j++){
+				const int nX = grid[j].x + pos.x + offsetsTest[i].x;
+				const int nY = grid[j].y + pos.y + offsetsTest[i].y;
+				if((nX < 0 || nX > 9) || (nY >= HEIGHT_B)){
+					success = 0;
+					break;
+				}
+
+				if(board.grid[nY * WIDTH_B + nX]){
+					success = 0;
+					break;
+				}
 			}
-		}else if(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9){
-			while(board.currentTetr.pos.x + board.currentTetr.pieceGrid[i].x > 9)
-			{
-				board.currentTetr.pos.x--;
+
+			if(success){
+				board.currentTetr.pos.x += offsetsTest[i].x;
+				board.currentTetr.pos.y += offsetsTest[i].y;
+				board.currentTetr.rotationIdx = nextRotationIdx;
+				board.currentTetr.pieceGrid = grid;
+				break;
+			}
+		}
+	}else{
+		const char testCase = board.currentTetr.rotationIdx;
+		char nextRotationIdx = (board.currentTetr.rotationIdx - 1) % 4;
+		nextRotationIdx = (nextRotationIdx < 0) ? 3 : nextRotationIdx;
+		const struct Vec2d pos = board.currentTetr.pos;
+		const struct Vec2d *grid = getRotatedPieceGrid(board.currentTetr.piece, nextRotationIdx);
+
+		struct Vec2d offsetsTest[5];
+
+		for(int i = 0; i < 5; i++){
+			offsetsTest[i] = (struct Vec2d){
+				.x = rotationOffsetsI[testCase][i].x - rotationOffsetsI[nextRotationIdx][i].x,
+				.y = rotationOffsetsI[testCase][i].y - rotationOffsetsI[nextRotationIdx][i].y,
+			};
+		}
+
+		for(int i = 0; i < 5; i++){
+			char success = 1;
+			for(int j = 0; j < 4; j++){
+				const int nX = grid[j].x + pos.x + offsetsTest[i].x;
+				const int nY = grid[j].y + pos.y + offsetsTest[i].y;
+				if((nX < 0 || nX > 9) || (nY >= HEIGHT_B)){
+					success = 0;
+					break;
+				}
+
+				if(board.grid[nY * WIDTH_B + nX]){
+					success = 0;
+					break;
+				}
+			}
+
+			if(success){
+				board.currentTetr.pos.x += offsetsTest[i].x;
+				board.currentTetr.pos.y += offsetsTest[i].y;
+				board.currentTetr.rotationIdx = nextRotationIdx;
+				board.currentTetr.pieceGrid = grid;
+				break;
 			}
 		}
 	}
@@ -469,8 +617,6 @@ void initPieceQueue(TetrominosType queue[4])
 	}
 }
 
-
-
 bool checkNextPosition(struct Vec2d nextPos){
 	if(board.grid[nextPos.y * WIDTH_B + nextPos.x]){
 		return true;
@@ -481,7 +627,7 @@ bool checkNextPosition(struct Vec2d nextPos){
 
 static inline void setSquare(int row, int col, int value)
 {
-  if(board.grid[row * WIDTH_B + col] < 0 ||	board.grid[row * WIDTH_B + col]> 7 )
-    return;
-  board.grid[row * WIDTH_B + col] = value;
+	if(board.grid[row * WIDTH_B + col] < 0 ||	board.grid[row * WIDTH_B + col]> 7 )
+		return;
+	board.grid[row * WIDTH_B + col] = value;
 }
