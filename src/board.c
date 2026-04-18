@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <math.h>
 
 #include "board.h"
 #include "tetromino.h"
@@ -15,6 +16,9 @@
 
 struct Board{ 
 	int grid[200];
+	float dropV;
+	int level;
+	int linesCleared;
 	struct Tetrominos currentTetr;
 	enum TetrominosType hold;
 	enum TetrominosType queue[4];
@@ -51,6 +55,7 @@ static struct Board board = {};
 
 bool checkNextPosition(struct Vec2d nextPos);
 void initPieceQueue(TetrominosType queue[4]);
+float getDropVelocity(int level);
 
 void initBoard()
 {
@@ -62,6 +67,8 @@ void initBoard()
 
 	board.holding = 0;
 	board.swap = 0;
+	board.level = 1;
+	//board.dropV = getG(board.level);
 
 	board.currentTetr.piece = getPiece();
 	board.currentTetr.pieceGrid = getPieceGrid(board.currentTetr.piece);
@@ -69,6 +76,7 @@ void initBoard()
 	board.currentTetr.autoShiftDownClock = clock();
 	board.currentTetr.softLockTimer = clock();
 	board.currentTetr.rotationIdx = 0;
+	board.linesCleared = 0;
 	board.currentTetr.startSoftLockTimer = false;
 
 	initPieceQueue(board.queue);
@@ -224,15 +232,24 @@ void storePiece()
 }
 
 char updateBoard()
-{
+{	
 	int autoShiftTimer = (clock() - board.currentTetr.autoShiftDownClock) * 0.001;
+
 	
-	if(autoShiftTimer >= 50){
+	if(autoShiftTimer >= getDropVelocity(board.level) * 60){
 		shiftDown();
 		board.currentTetr.autoShiftDownClock = clock();
 	}
+	
+	char filledRows = checkFilledRows();
 
-	return checkFilledRows();
+	board.linesCleared += filledRows;
+
+	if(board.linesCleared >= board.level * 10){
+		board.level++;
+	}
+
+	return filledRows;
 }
 
 void shiftDown()
@@ -615,6 +632,11 @@ void initPieceQueue(TetrominosType queue[4])
 	for(int i = 0; i < 4; i++){
 		queue[i] = getPiece();
 	}
+}
+
+float getDropVelocity(int level)
+{
+    return powf((0.8f - ((level - 1.f) * 0.007f)), (level - 1));
 }
 
 bool checkNextPosition(struct Vec2d nextPos){
